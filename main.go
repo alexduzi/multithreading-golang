@@ -15,16 +15,25 @@ import (
 // http://viacep.com.br/ws/" + cep + "/json/
 
 func main() {
-	fmt.Println(os.Args)
-
 	cep := os.Args[1]
 
-	fmt.Printf("consultando cep utilizando via cep: %s\n", cep)
-	start := time.Now()
-	modelViaCep, err := service.GetCep[model.ViacepResponse](context.Background(), model.ViaCep, cep)
-	if err != nil {
-		panic(err)
+	ch := make(chan model.CepResponseChannel, 1)
+
+	go func(cep string) {
+		service.GetCep(context.Background(), ch, model.ViaCep, cep)
+	}(cep)
+
+	go func(cep string) {
+		service.GetCep(context.Background(), ch, model.BrasilApi, cep)
+	}(cep)
+
+	for {
+		time.Sleep(time.Second)
+		select {
+		case value := <-ch:
+			fmt.Printf("%+v", value)
+		default:
+			println("finalizado")
+		}
 	}
-	fmt.Printf("finalizado consulta cep utilizando via cep: %v\n", time.Until(start))
-	fmt.Printf("retorno: %v\n", modelViaCep)
 }

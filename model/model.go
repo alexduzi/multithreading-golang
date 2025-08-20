@@ -7,6 +7,12 @@ const (
 	BrasilApi CepApi = "BRAZILAPI"
 )
 
+type CepResponseChannel struct {
+	Body []byte
+	Url  string
+	Err  error
+}
+
 type ViacepResponse struct {
 	Cep         string `json:"cep"`
 	Logradouro  string `json:"logradouro"`
