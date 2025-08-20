@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 type CepApi string
 
 const (
@@ -8,9 +10,11 @@ const (
 )
 
 type CepResponseChannel struct {
-	Body []byte
-	Url  string
-	Err  error
+	Body    []byte
+	Url     string
+	CepApi  CepApi
+	Err     error
+	Elapsed time.Duration
 }
 
 type ViacepResponse struct {

@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -17,23 +17,26 @@ import (
 func main() {
 	cep := os.Args[1]
 
-	ch := make(chan model.CepResponseChannel, 1)
+	ch := make(chan model.CepResponseChannel, 2)
 
-	go func(cep string) {
-		service.GetCep(context.Background(), ch, model.ViaCep, cep)
-	}(cep)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
 
-	go func(cep string) {
-		service.GetCep(context.Background(), ch, model.BrasilApi, cep)
-	}(cep)
+	go service.GetCep(ctx, ch, model.ViaCep, cep)
 
-	for {
-		time.Sleep(time.Second)
-		select {
-		case value := <-ch:
-			fmt.Printf("%+v", value)
-		default:
-			println("finalizado")
+	go service.GetCep(ctx, ch, model.BrasilApi, cep)
+
+	select {
+	case value := <-ch:
+		if value.Err != nil {
+			log.Printf("erro na requisição: %v\n", value.Err)
+			return
 		}
+
+		log.Printf("Resposta mais rápida veio da: %s com tempo de %v\n", value.CepApi, value.Elapsed)
+		log.Printf("URL: %s\n", value.Url)
+		service.DisplayResult(value)
+	case <-ctx.Done():
+		log.Println("timeout: nenhuma API respondeu em 1 segundo")
 	}
 }
