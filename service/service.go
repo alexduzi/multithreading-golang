@@ -30,17 +30,6 @@ func buildResponse(url string, api model.CepApi, result model.RequestResult, ela
 	}
 }
 
-func trySendResponse(ctx context.Context, channel chan<- model.CepResponseChannel, response model.CepResponseChannel) {
-	select {
-	case channel <- response:
-		if response.Err == nil {
-			log.Printf("Chamada %s finalizada com sucesso em %v!\n", response.Url, response.Elapsed)
-		}
-	case <-ctx.Done():
-		log.Printf("Chamada %s foi cancelada durante envio\n", response.Url)
-	}
-}
-
 func executeRequest(ctx context.Context, url string) model.RequestResult {
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
@@ -62,33 +51,21 @@ func executeRequest(ctx context.Context, url string) model.RequestResult {
 	return model.RequestResult{Body: body, Err: err}
 }
 
+func trySendResponse(ctx context.Context, channel chan<- model.CepResponseChannel, response model.CepResponseChannel) {
+	select {
+	case channel <- response:
+		if response.Err == nil {
+			log.Printf("chamada %s finalizada com sucesso em %v!\n", response.Url, response.Elapsed)
+		}
+	case <-ctx.Done():
+		log.Printf("chamada %s foi cancelada durante envio\n", response.Url)
+	}
+}
+
 func getModel[T model.ViacepResponse | model.BrasilApiResponse](bodyBytes []byte) T {
 	var model T
 	json.Unmarshal(bodyBytes, &model)
 	return model
-}
-
-func GetCep(ctx context.Context, channel chan<- model.CepResponseChannel, api model.CepApi, cep string) {
-	start := time.Now()
-	url := getApiUrl(api, cep)
-
-	result := executeRequest(ctx, url)
-	elapsed := time.Since(start)
-	response := buildResponse(url, api, result, elapsed)
-	trySendResponse(ctx, channel, response)
-}
-
-func DisplayResult(value model.CepResponseChannel) {
-	log.Println()
-	log.Printf("Dados do endereço %v\n", value.CepApi)
-	log.Println()
-
-	switch value.CepApi {
-	case model.ViaCep:
-		displayViaCepResult(value.Body)
-	case model.BrasilApi:
-		displayBrasilApiResult(value.Body)
-	}
 }
 
 func displayViaCepResult(body []byte) {
@@ -121,5 +98,28 @@ func printFields(fields map[string]string) {
 		if value != "" {
 			log.Printf("%s: %s\n", label, value)
 		}
+	}
+}
+
+func GetCep(ctx context.Context, channel chan<- model.CepResponseChannel, api model.CepApi, cep string) {
+	start := time.Now()
+	url := getApiUrl(api, cep)
+
+	result := executeRequest(ctx, url)
+	elapsed := time.Since(start)
+	response := buildResponse(url, api, result, elapsed)
+	trySendResponse(ctx, channel, response)
+}
+
+func DisplayResult(value model.CepResponseChannel) {
+	log.Println()
+	log.Printf("dados do endereço %v\n", value.CepApi)
+	log.Println()
+
+	switch value.CepApi {
+	case model.ViaCep:
+		displayViaCepResult(value.Body)
+	case model.BrasilApi:
+		displayBrasilApiResult(value.Body)
 	}
 }

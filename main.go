@@ -33,8 +33,8 @@ func main() {
 			return
 		}
 
-		log.Printf("Resposta mais rápida veio da: %s com tempo de %v\n", value.CepApi, value.Elapsed)
-		log.Printf("URL: %s\n", value.Url)
+		log.Printf("resposta mais rápida veio da: %s com tempo de %v\n", value.CepApi, value.Elapsed)
+		log.Printf("url: %s\n", value.Url)
 		service.DisplayResult(value)
 	case <-ctx.Done():
 		log.Println("timeout: nenhuma API respondeu em 1 segundo")
