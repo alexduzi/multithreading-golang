@@ -10,10 +10,6 @@ import (
 	"github.com/alexduzi/multithreading/service"
 )
 
-// https://brasilapi.com.br/api/cep/v1/01153000 + cep
-
-// http://viacep.com.br/ws/" + cep + "/json/
-
 func main() {
 	cep := os.Args[1]
 
