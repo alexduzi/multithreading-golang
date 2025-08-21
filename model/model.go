@@ -9,6 +9,11 @@ const (
 	BrasilApi CepApi = "BRAZILAPI"
 )
 
+type RequestResult struct {
+	Body []byte
+	Err  error
+}
+
 type CepResponseChannel struct {
 	Body    []byte
 	Url     string
